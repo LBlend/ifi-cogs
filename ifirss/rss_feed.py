@@ -1,4 +1,4 @@
-class RssFeed():
+class RssFeed:
     """RSS feed object"""
 
     def __init__(self, **kwargs):

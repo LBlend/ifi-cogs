@@ -1,4 +1,6 @@
 import asyncio
+
+import bs4
 import aiohttp
 from bs4 import BeautifulSoup
 import copy
@@ -9,6 +11,7 @@ import imghdr
 import io
 import logging
 import re
+import requests
 import time
 from typing import Optional
 from types import MappingProxyType, SimpleNamespace
@@ -32,7 +35,7 @@ IPV6_RE = re.compile("([a-f0-9:]+:+)+[a-f0-9]+")
 __version__ = "1.6.3"
 
 
-class RSS(commands.Cog):
+class IFIRSS(commands.Cog):
     """RSS feeds for your server."""
 
     def __init__(self, bot):
