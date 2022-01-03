@@ -578,6 +578,52 @@ class IFIRSS(commands.Cog):
             log.error(f"Failure accessing image in embed feed at url:\n\t{url}", exc_info=True)
             return None
 
+    def _get_semesters(self):
+        """
+        Get the next and current semester code based on current date.
+        """
+
+        now = datetime.datetime.now()
+        current_year = int(str(now.year)[-2:])
+
+        if now.month < 8:
+            current_sem = f"v{current_year}"
+            next_sem = f"h{current_year}"
+        else:
+            current_sem = f"h{current_year}"
+            next_sem = f"v{current_year + 1}"
+
+        return next_sem, current_sem
+
+    async def _get_course_feed(self, channel_name: str):
+        """
+        Attempts to fetch the RSS course feed based on channel name and current time of year
+        """
+
+        course_code = re.search(r"^[a-zA-Z]+\d{4}", channel_name)
+        if not course_code:
+            return
+        else:
+            course_code = course_code[0]
+
+        data = requests.get(
+            f"https://www.uio.no/studier/emner/index.html?action=autocomplete&service=emner&scope=/studier/emner&q={course_code}&limit=1&timestamp={datetime.datetime.now().timestamp()}"
+        ).text
+
+        course_code, _, course_url = data.split("\n")[0].split(";")
+
+        semesters = self._get_semesters()
+        for semester in semesters:
+            feed_url = f"{course_url}{semester}/beskjeder/?vrtx=feed"
+            try:
+                await self._valid_url(feed_url)
+            except NoFeedContent:
+                continue
+
+            return course_code, feed_url
+
+        return course_code, None
+
     @commands.guild_only()
     @commands.group()
     @checks.mod_or_permissions(manage_channels=True)
@@ -612,6 +658,27 @@ class IFIRSS(commands.Cog):
 
             if valid_url:
                 await self._add_feed(ctx, feed_name.lower(), channel, url)
+            else:
+                await ctx.send("Invalid or unavailable URL.")
+
+    @rss.command(name="ifiadd")
+    async def _ifi_rss_add(self, ctx, channel: Optional[discord.TextChannel] = None):
+        """
+        Add an RSS feed to a channel.
+
+        Defaults to the current channel if no channel is specified.
+        """
+        channel = channel or ctx.channel
+        channel_permission_check = await self._check_channel_permissions(ctx, channel)
+        if not channel_permission_check:
+            return
+
+        async with ctx.typing():
+            feed_name, url = await self._get_course_feed(channel.name)
+
+            if url:
+                # await self._add_feed(ctx, feed_name.lower(), channel, url)
+                await ctx.send(f"Feed ville blitt navngitt `{feed_name}` og koblet til url {url}")
             else:
                 await ctx.send("Invalid or unavailable URL.")
 
