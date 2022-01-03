@@ -607,7 +607,7 @@ class IFIRSS(commands.Cog):
             course_code = course_code[0]
 
         data = requests.get(
-            f"https://www.uio.no/studier/emner/index.html?action=autocomplete&service=emner&scope=/studier/emner&q={course_code}&limit=1&timestamp={datetime.datetime.now().timestamp()}"
+            f"https://www.uio.no/studier/emner/index.html?action=autocomplete&service=emner&scope=/studier/emner&q={course_code}&limit=1"
         ).text
 
         course_code, _, course_url = data.split("\n")[0].split(";")
