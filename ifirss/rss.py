@@ -695,6 +695,38 @@ class IFIRSS(commands.Cog):
             else:
                 await ctx.send("Invalid or unavailable URL.")
 
+    @rss.command(name="ifiaddall")
+    async def _ifi_rss_add_all(self, ctx):
+        """
+        Add an RSS feed to a channel.
+
+        Defaults to the current channel if no channel is specified.
+        """
+        await ctx.send("Processing...\nThis may take a couple of minutes")
+
+        result = ""
+        for channel in ctx.guild.channels:
+            #  Preemptively skip invalid channels. Redundant? yes.
+            course_code = re.search(r"^[a-zA-Z]+\d{4}", channel.name)
+            if (
+                not isinstance(channel, discord.TextChannel)
+                or not course_code
+                or not await self._check_channel_permissions(ctx, channel)
+            ):
+                continue
+
+            await asyncio.sleep(5)  # Avoid getting booted by UiO monkaS
+
+            feed_name, url = await self._get_course_feed(channel.name)
+
+            if url:
+                result += f"{channel.mention}: `{feed_name}` - {url}\n"
+
+        if len(result) > 2000:
+            await ctx.send(file=discord.File(fp=io.StringIO(result), filename="rss_feeds.txt"))
+        else:
+            await ctx.send(result)
+
     @rss.group(name="embed")
     async def _rss_embed(self, ctx):
         """Embed feed settings."""
