@@ -602,27 +602,40 @@ class IFIRSS(commands.Cog):
 
         course_code = re.search(r"^[a-zA-Z]+\d{4}", channel_name)
         if not course_code:
-            return
+            return None, None
         else:
-            course_code = course_code[0]
+            course_code = course_code[0].upper()
 
         data = requests.get(
             f"https://www.uio.no/studier/emner/index.html?action=autocomplete&service=emner&scope=/studier/emner&q={course_code}&limit=1"
-        ).text
+        ).text.split("\n")
 
-        course_code, _, course_url = data.split("\n")[0].split(";")
+        found = False
+        for course in data:
+            try:
+                course_id, _, course_url = course.split(";")
+            except ValueError:  # Prevent unpacking error from discountinued courses
+                continue
 
-        semesters = self._get_semesters()
-        for semester in semesters:
+            if not course_url.endswith("/"):  # Fuck UiO and their retarded ass inconsistent URLs
+                continue
+
+            if course_code == course_id:
+                found = True
+                break
+
+        if not found:
+            return None, None
+
+        for semester in self._get_semesters():
             feed_url = f"{course_url}{semester}/beskjeder/?vrtx=feed"
             try:
                 await self._valid_url(feed_url)
             except NoFeedContent:
                 continue
+            return course_id, feed_url
 
-            return course_code, feed_url
-
-        return course_code, None
+        return course_id, None
 
     @commands.guild_only()
     @commands.group()
