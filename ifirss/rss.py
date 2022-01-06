@@ -653,37 +653,14 @@ class IFIRSS(commands.Cog):
         """RSS feed stuff."""
         pass
 
-    @rss.command(name="add")
-    async def _rss_add(self, ctx, feed_name: str, channel: Optional[discord.TextChannel] = None, *, url: str):
-        """
-        Add an RSS feed to a channel.
+    @commands.guild_only()
+    @rss.group()
+    @checks.mod_or_permissions(manage_channels=True)
+    async def ifi(self, ctx):
+        """IFIRSS feed stuff."""
+        pass
 
-        Defaults to the current channel if no channel is specified.
-        """
-        if feed_name.startswith("<#"):
-            # someone typed a channel name but not a feed name
-            msg = "Try again with a feed name included in the right spot so that you can refer to the feed later.\n"
-            msg += f"Example: `{ctx.prefix}rss add feed_name channel_name feed_url`"
-            await ctx.send(msg)
-            return
-        channel = channel or ctx.channel
-        channel_permission_check = await self._check_channel_permissions(ctx, channel)
-        if not channel_permission_check:
-            return
-
-        async with ctx.typing():
-            try:
-                valid_url = await self._valid_url(url)
-            except NoFeedContent as e:
-                await ctx.send(str(e))
-                return
-
-            if valid_url:
-                await self._add_feed(ctx, feed_name.lower(), channel, url)
-            else:
-                await ctx.send("Invalid or unavailable URL.")
-
-    @rss.command(name="ifiadd")
+    @ifi.command(name="add")
     async def _ifi_rss_add(self, ctx, channel: Optional[discord.TextChannel] = None):
         """
         Add an RSS feed to a channel.
@@ -720,7 +697,7 @@ class IFIRSS(commands.Cog):
                 else:
                     await ctx.sennd(f"Failed setting template")
 
-    @rss.command(name="ifiaddall")
+    @ifi.command(name="addall")
     async def _ifi_rss_add_all(self, ctx):
         """
         Add an RSS feed to a channel.
@@ -772,7 +749,7 @@ class IFIRSS(commands.Cog):
                     await ctx.send(f"Failed setting template for {feed_name}")
             await ctx.send("Feeds added!")
 
-    @rss.command(name="ifiremoveall")
+    @ifi.command(name="removeall")
     async def _ifi_rss_remove_all(self, ctx, semester):
         removed = ""
         for channel in ctx.guild.channels:
@@ -810,6 +787,36 @@ class IFIRSS(commands.Cog):
             await ctx.send("Confirmation timed out!")
         else:
             await ctx.send("Feeds removed!")
+
+    @rss.command(name="add")
+    async def _rss_add(self, ctx, feed_name: str, channel: Optional[discord.TextChannel] = None, *, url: str):
+        """
+        Add an RSS feed to a channel.
+
+        Defaults to the current channel if no channel is specified.
+        """
+        if feed_name.startswith("<#"):
+            # someone typed a channel name but not a feed name
+            msg = "Try again with a feed name included in the right spot so that you can refer to the feed later.\n"
+            msg += f"Example: `{ctx.prefix}rss add feed_name channel_name feed_url`"
+            await ctx.send(msg)
+            return
+        channel = channel or ctx.channel
+        channel_permission_check = await self._check_channel_permissions(ctx, channel)
+        if not channel_permission_check:
+            return
+
+        async with ctx.typing():
+            try:
+                valid_url = await self._valid_url(url)
+            except NoFeedContent as e:
+                await ctx.send(str(e))
+                return
+
+            if valid_url:
+                await self._add_feed(ctx, feed_name.lower(), channel, url)
+            else:
+                await ctx.send("Invalid or unavailable URL.")
 
     @rss.group(name="embed")
     async def _rss_embed(self, ctx):
