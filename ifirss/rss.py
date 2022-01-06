@@ -633,7 +633,7 @@ class IFIRSS(commands.Cog):
                 await self._valid_url(feed_url)
             except NoFeedContent:
                 continue
-            return course_id, feed_url
+            return f"{semester}_{course_id}", feed_url
 
         return course_id, None
 
