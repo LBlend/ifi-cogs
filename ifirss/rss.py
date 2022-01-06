@@ -690,10 +690,22 @@ class IFIRSS(commands.Cog):
             feed_name, url = await self._get_course_feed(channel.name)
 
             if url:
-                # await self._add_feed(ctx, feed_name.lower(), channel, url)
-                await ctx.send(f"Feed ville blitt navngitt `{feed_name}` og koblet til url {url}")
+                await ctx.send(
+                    f"Feed will be named `{feed_name}` and its url will be:\n{url}\n\n**Type `y` to confirm**"
+                )
             else:
                 await ctx.send("Invalid or unavailable URL.")
+
+            def confirm(message):
+                return message.author == ctx.author and message.content.lower() == "y"
+
+            try:
+                await self.bot.wait_for("message", check=confirm, timeout=30)
+            except asyncio.TimeoutError:
+                await ctx.send("Confirmation timed out!")
+            else:
+                await self._add_feed(ctx, feed_name.lower(), channel, url)
+                await ctx.send(f"Feed `{feed_name.lower()}` added!")
 
     @rss.command(name="ifiaddall")
     async def _ifi_rss_add_all(self, ctx):
