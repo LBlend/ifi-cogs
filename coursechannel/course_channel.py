@@ -21,7 +21,7 @@ class CourseChannel(commands.Cog):
         if now.month < 8:
             previous_sem = f"{current_year - 1}h"
             current_sem = f"{current_year}v"
-            next_sem = f"{current_year + 1}h"
+            next_sem = f"{current_year}h"
         else:
             previous_sem = f"{current_year}v"
             current_sem = f"{current_year}h"
@@ -29,9 +29,8 @@ class CourseChannel(commands.Cog):
 
         return next_sem, current_sem, previous_sem
 
-
     @commands.guild_only()
-    @commands.command(name='coursechannel')
+    @commands.command(name="coursechannel")
     async def _coursechannel(self, ctx: commands.Context, *, course_code: str):
         """
         Create a course channel for a given course code.
@@ -52,17 +51,19 @@ class CourseChannel(commands.Cog):
 
             courses = requests.get(f"https://tp.uio.no/uio/ws/course/?id=185&sem={semester}").json()
 
-            for course in courses['data']:
-                if course['id'] == course_code.upper():
+            for course in courses["data"]:
+                if course["id"] == course_code.upper():
                     found = True
-                    course_name = course['name']
+                    course_name = course["name"]
                     break
 
         if not found:
             await ctx.send("Course not found.")
             return
 
-        course_level = re.findall(r"([a-zA-Z]+)(\d{4})", course_code)[0][1][0]  # Get the first digit of the course number code
+        course_level = re.findall(r"([a-zA-Z]+)(\d{4})", course_code)[0][1][
+            0
+        ]  # Get the first digit of the course number code
 
         #  Hardcoded because fuck you.
         course_categories = {
@@ -75,6 +76,8 @@ class CourseChannel(commands.Cog):
         category_id = course_categories.get(course_level, other)
 
         category = ctx.guild.get_channel(category_id)
-        channel = await category.create_text_channel(f"{course_code}-diskusjon", reason="auto-generated course channel with command", topic=course_name)
+        channel = await category.create_text_channel(
+            f"{course_code}-diskusjon", reason="auto-generated course channel with command", topic=course_name
+        )
 
         await ctx.send(f"Created channel {channel.mention} in {category.mention}")
