@@ -730,6 +730,7 @@ class IFIRSS(commands.Cog):
         await ctx.send("Processing...\nThis may take a couple of minutes")
 
         result = ""
+        feeds = []
         for channel in ctx.guild.channels:
             #  Preemptively skip invalid channels. Redundant? yes.
             course_code = re.search(r"^[a-zA-Z]+\d{4}", channel.name)
@@ -745,12 +746,31 @@ class IFIRSS(commands.Cog):
             feed_name, url = await self._get_course_feed(channel.name)
 
             if url:
+                feeds.append((feed_name.lower(), channel, url))
                 result += f"{channel.mention}: `{feed_name}` - {url}\n"
 
         if len(result) > 2000:
             await ctx.send(file=discord.File(fp=io.StringIO(result), filename="rss_feeds.txt"))
         else:
             await ctx.send(result)
+
+        await ctx.send(f"{ctx.author.mention}\nAdd these feeds? Type `y` to confirm")
+
+        def confirm(message):
+            return message.author == ctx.author and message.content.lower() == "y"
+
+        try:
+            await self.bot.wait_for("message", check=confirm, timeout=60)
+        except asyncio.TimeoutError:
+            await ctx.send("Confirmation timed out!")
+        else:
+            for feed in feeds:
+                feed_name, channel, url = feed
+                await asyncio.sleep(2)  # Avoid getting booted by Discord monkaS
+                await self._add_feed(ctx, feed_name, channel, url)
+                if not await self._edit_template(ctx, feed_name, channel, self.default_template):
+                    await ctx.send(f"Failed setting template for {feed_name}")
+            await ctx.send("Feeds added!")
 
     @rss.group(name="embed")
     async def _rss_embed(self, ctx):
