@@ -52,6 +52,15 @@ class IFIRSS(commands.Cog):
 
         self._headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0"}
 
+        self.default_template = """
+        **$title**
+
+        $link
+
+        ------------------------------
+        *publisert:* `$published_parsed_datetime`
+        """
+
     async def red_delete_data_for_user(self, **kwargs):
         """Nothing to delete"""
         return
@@ -706,6 +715,10 @@ class IFIRSS(commands.Cog):
             else:
                 await self._add_feed(ctx, feed_name.lower(), channel, url)
                 await ctx.send(f"Feed `{feed_name.lower()}` added!")
+                if await self._edit_template(ctx, feed_name, channel, self.default_template):
+                    await ctx.send(f"Feed template set")
+                else:
+                    await ctx.sennd(f"Failed setting template")
 
     @rss.command(name="ifiaddall")
     async def _ifi_rss_add_all(self, ctx):
