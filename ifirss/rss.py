@@ -772,6 +772,45 @@ class IFIRSS(commands.Cog):
                     await ctx.send(f"Failed setting template for {feed_name}")
             await ctx.send("Feeds added!")
 
+    @rss.command(name="ifiremoveall")
+    async def _ifi_rss_remove_all(self, ctx, semester):
+        removed = ""
+        for channel in ctx.guild.channels:
+            course_code = re.search(r"^[a-zA-Z]+\d{4}", channel.name)
+            if not isinstance(channel, discord.TextChannel) or not course_code:
+                continue
+
+            feeds = await self._get_feed_names(channel)
+            if not feeds:
+                continue
+
+            for feed in feeds:
+                feed = feed.split()[0]
+                if feed.startswith(semester):
+                    removed += f"{channel.mention}: `{feed}`\n"
+                    await self._delete_feed(ctx, feed, channel)
+
+        if not removed:
+            await ctx.send("No feeds were removed")
+            return
+
+        if len(removed) > 2000:
+            await ctx.send(file=discord.File(fp=io.StringIO(removed), filename="rss_feeds_removed.txt"))
+        else:
+            await ctx.send(removed)
+
+        await ctx.send("Remove these feeds? Type `y` to confirm")
+
+        def confirm(message):
+            return message.author == ctx.author and message.content.lower() == "y"
+
+        try:
+            await self.bot.wait_for("message", check=confirm, timeout=60)
+        except asyncio.TimeoutError:
+            await ctx.send("Confirmation timed out!")
+        else:
+            await ctx.send("Feeds removed!")
+
     @rss.group(name="embed")
     async def _rss_embed(self, ctx):
         """Embed feed settings."""
