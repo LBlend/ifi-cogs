@@ -660,6 +660,11 @@ class IFIRSS(commands.Cog):
         """IFIRSS feed stuff."""
         pass
 
+        # TODO:
+        # - Add migration command
+        # - Refactor
+        #   - Move confirmation to separate function
+
     @ifi.command(name="add")
     async def _ifi_rss_add(self, ctx, channel: Optional[discord.TextChannel] = None):
         """
