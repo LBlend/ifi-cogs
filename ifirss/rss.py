@@ -663,7 +663,7 @@ class IFIRSS(commands.Cog):
     @ifi.command(name="add")
     async def _ifi_rss_add(self, ctx, channel: Optional[discord.TextChannel] = None):
         """
-        Add an RSS feed to a channel.
+        Attempts to fetch and add the course feed for the current/next semester in a specified channel.
 
         Defaults to the current channel if no channel is specified.
         """
@@ -700,9 +700,7 @@ class IFIRSS(commands.Cog):
     @ifi.command(name="addall")
     async def _ifi_rss_add_all(self, ctx):
         """
-        Add an RSS feed to a channel.
-
-        Defaults to the current channel if no channel is specified.
+        Attempts to fetch all course RSS feeds for the current/next semester and add them to their respective channels.
         """
         await ctx.send("Processing...\nThis may take a couple of minutes")
 
@@ -751,6 +749,9 @@ class IFIRSS(commands.Cog):
 
     @ifi.command(name="removeall")
     async def _ifi_rss_remove_all(self, ctx, semester):
+        """
+        Attempts to remove all course feeds for the specified semester.
+        """
         removed = ""
         for channel in ctx.guild.channels:
             course_code = re.search(r"^[a-zA-Z]+\d{4}", channel.name)
