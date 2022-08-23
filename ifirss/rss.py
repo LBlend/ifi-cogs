@@ -700,7 +700,7 @@ class IFIRSS(commands.Cog):
                 if await self._edit_template(ctx, feed_name, channel, self.default_template):
                     await ctx.send(f"Feed template set")
                 else:
-                    await ctx.sennd(f"Failed setting template")
+                    await ctx.send(f"Failed setting template")
 
     @ifi.command(name="addall")
     async def _ifi_rss_add_all(self, ctx):
